@@ -1,0 +1,39 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 17.09.2026 11:25:52
+// Design Name: 
+// Module Name: hazard_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module hazard_unit(rst,RegWriteM,RegWriteW,RDM,RDW,Rs1_E,Rs2_E,ForwardAE,ForwardBE);
+   input rst,RegWriteM,RegWriteW;
+   input[4:0]RDM,RDW,Rs1_E,Rs2_E;
+   output [1:0]ForwardAE,ForwardBE;
+   
+   
+   assign ForwardAE = 
+   
+   (rst==1'b1) ? 2'b00 : 
+                ((RegWriteM == 1'b1) & (RDM != 5'h00) & (RDM == Rs1_E)) ? 2'b10 :
+                ((RegWriteW == 1'b1) & (RDW != 5'h00) & (RDW == Rs1_E)) ? 2'b01 : 2'b00;
+                
+   assign ForwardBE = (rst==1'b1) ? 2'b00 : 
+                ((RegWriteM == 1'b1) & (RDM != 5'h00) & (RDM == Rs2_E)) ? 2'b10 :
+                ((RegWriteW == 1'b1) & (RDW != 5'h00) & (RDW == Rs2_E)) ? 2'b01 : 2'b00;               
+               
+endmodule
