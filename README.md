@@ -91,6 +91,7 @@ The processor was verified using:
 | x3 | 100 |
 | Memory[8] | 100 |
 
+
 RISC-V-Pipelined-CPU/
 │
 ├── RTL/
@@ -123,3 +124,4 @@ RISC-V-Pipelined-CPU/
 │   └── final_waveform.png
 │
 ├── README.md
+└── LICENSE
