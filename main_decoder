@@ -1,0 +1,45 @@
+module main_decoder(
+    op,
+    RegWrite,
+    MemWrite,
+    ResultSrc,
+    ALUSrc,
+    ImmSrc,
+    Branch,
+    ALUOp
+);
+
+    input [6:0] op;
+
+    output RegWrite;
+    output MemWrite;
+    output ResultSrc;
+    output ALUSrc;
+    output Branch;
+
+    output [1:0] ImmSrc;
+    output [1:0] ALUOp;
+
+    assign RegWrite = ((op == 7'b0000011) ||
+                       (op == 7'b0110011));
+
+    assign MemWrite = (op == 7'b0100011);
+
+    assign ResultSrc = (op == 7'b0000011);
+
+    assign ALUSrc = ((op == 7'b0000011) ||
+                     (op == 7'b0100011));
+
+    assign Branch = (op == 7'b1100011);
+
+    assign ImmSrc =
+        (op == 7'b0100011) ? 2'b01 :
+        (op == 7'b1100011) ? 2'b10 :
+                             2'b00;
+
+    assign ALUOp =
+        (op == 7'b0110011) ? 2'b10 :
+        (op == 7'b1100011) ? 2'b01 :
+                             2'b00;
+
+endmodule
