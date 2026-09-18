@@ -1,0 +1,57 @@
+module ALU_Flag(A,B,ALUControl,Result,Z,N,C,V);
+
+ // Inputs
+ input [31:0] A,B;
+ input [2:0] ALUControl;
+
+ // Output
+ output [31:0] Result;
+ output Z,N,C,V;
+
+ // Internal wires
+ wire [31:0] and_out;
+ wire [31:0] or_out;
+ wire [31:0] not_b;
+ wire [31:0] mux_1;
+ wire [31:0] sum;
+ wire [31:0] mux_2;
+ wire cout;
+ wire slt;
+
+ // Logic
+
+ assign and_out = A & B;
+
+ assign or_out  = A | B;
+
+ assign not_b   = ~B;
+
+ assign mux_1 = (ALUControl[0] == 1'b0) ?
+                B :
+                not_b;
+
+ assign {cout,sum} = A + mux_1 + ALUControl[0];
+ // zero extension
+ assign slt = {31'b0, sum[31]};
+
+ assign mux_2 =
+       (ALUControl == 3'b000) ? sum :
+       (ALUControl == 3'b001) ? sum :
+       (ALUControl == 3'b010) ? and_out :
+       (ALUControl == 3'b011) ? or_out :
+       (ALUControl == 3'b101) ? slt :
+                                32'h00000000;
+        
+
+
+
+ assign Result = mux_2;
+ 
+ // flags assigning
+ assign Z =&(~Result);
+ assign N = Result[31]; 
+ assign C = cout & (~ALUControl[1]);
+ assign V = (~ALUControl[1]) & (A[31] ^ sum[31]) & (~(A[31] ^ B[31] ^ ALUControl[0]));
+
+
+endmodule
