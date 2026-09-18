@@ -1,0 +1,53 @@
+module ALU_decoder(
+    ALUOp,
+    op5,
+    funct3,
+    funct7,
+    ALUControl
+);
+
+    input op5;
+    input funct7;
+    input [2:0] funct3;
+    input [1:0] ALUOp;
+
+    output [2:0] ALUControl;
+
+    wire [1:0] concatenation;
+
+    assign concatenation = {op5, funct7};
+
+    assign ALUControl =
+
+        // LW, SW
+        (ALUOp == 2'b00) ? 3'b000 :
+
+        // BEQ
+        (ALUOp == 2'b01) ? 3'b001 :
+
+        // R-type ADD
+        ((ALUOp == 2'b10) &&
+         (funct3 == 3'b000) &&
+         (concatenation != 2'b11)) ? 3'b000 :
+
+        // R-type SUB
+        ((ALUOp == 2'b10) &&
+         (funct3 == 3'b000) &&
+         (concatenation == 2'b11)) ? 3'b001 :
+
+        // SLT
+        ((ALUOp == 2'b10) &&
+         (funct3 == 3'b010)) ? 3'b101 :
+
+        // OR
+        ((ALUOp == 2'b10) &&
+         (funct3 == 3'b110)) ? 3'b011 :
+
+        // AND
+        ((ALUOp == 2'b10) &&
+         (funct3 == 3'b111)) ? 3'b010 :
+
+        // Default
+        3'b000;
+
+endmodule
