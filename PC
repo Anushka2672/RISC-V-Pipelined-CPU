@@ -1,0 +1,25 @@
+module PC(
+    PC_Next,
+    PC,
+    rst,
+    clk,
+    PCWrite
+);
+
+    input [31:0] PC_Next;
+    input clk;
+    input rst;
+    input PCWrite;
+
+    output reg [31:0] PC;
+
+    always @(posedge clk)
+    begin
+        if(rst)
+            PC <= 32'h00000000;
+
+        else if(PCWrite)
+            PC <= PC_Next;
+    end
+
+endmodule
