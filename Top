@@ -1,0 +1,274 @@
+`timescale 1ns / 1ps
+
+module top(
+    input clk,
+    input rst
+);
+
+    wire PCWrite;
+    wire IF_ID_Write;
+    wire Control_Flush;
+
+    wire [4:0] Rs1_D;
+    wire [4:0] Rs2_D;
+
+    wire Rs1_Used_D;
+    wire Rs2_Used_D;
+
+    wire PCsrcE;
+
+    wire RegwriteW;
+
+    wire RegWriteE;
+    wire ALUSrcE;
+    wire MemWriteE;
+    wire ResultSrcE;
+    wire BranchE;
+
+
+    wire RegWriteM;
+    wire ResultSrcM;
+    wire MemWriteM;
+
+
+    wire ResultSrcW;
+    wire MemWriteW;
+
+
+    wire [2:0] ALUControlE;
+
+
+    wire [4:0] RDW;
+    wire [4:0] RDE;
+    wire [4:0] RDM;
+
+    wire [4:0] Rs1_E;
+    wire [4:0] Rs2_E;
+
+    wire [31:0] PCtargetE;
+
+    wire [31:0] InstrD;
+    wire [31:0] PCD;
+    wire [31:0] PCplus4D;
+
+
+    wire [31:0] RD1_E;
+    wire [31:0] RD2_E;
+
+    wire [31:0] Imm_Ext_E;
+
+    wire [31:0] PCE;
+    wire [31:0] PCplus4E;
+
+    wire [31:0] PCplus4M;
+    wire [31:0] WritedataM;
+    wire [31:0] ALU_resultM;
+
+
+    wire [31:0] PCplus4W;
+    wire [31:0] ALU_resultW;
+    wire [31:0] ReadDataW;
+
+    wire [31:0] ResultW;
+
+
+    wire [1:0] ForwardAE;
+    wire [1:0] ForwardBE;
+
+
+    // Decode Stage Source Registers
+
+    assign Rs1_D = InstrD[19:15];
+    assign Rs2_D = InstrD[24:20];
+
+
+    // Determine whether Decode instruction uses rs1
+
+    assign Rs1_Used_D =
+        (InstrD[6:0] == 7'b0110011) ||   // R-type
+        (InstrD[6:0] == 7'b0010011) ||   // I-type ALU
+        (InstrD[6:0] == 7'b0000011) ||   // LW
+        (InstrD[6:0] == 7'b0100011) ||   // SW
+        (InstrD[6:0] == 7'b1100011) ||   // Branch
+        (InstrD[6:0] == 7'b1100111);     // JALR
+
+
+    // Determine whether Decode instruction uses rs2
+
+    assign Rs2_Used_D =
+        (InstrD[6:0] == 7'b0110011) ||   // R-type
+        (InstrD[6:0] == 7'b0100011) ||   // SW
+        (InstrD[6:0] == 7'b1100011);     // Branch
+
+
+    fetch_cycle F1(
+        .clk(clk),
+        .rst(rst),
+
+        .PCsrcE(PCsrcE),
+        .PCtargetE(PCtargetE),
+
+        // Hazard detection
+        .PCWrite(PCWrite),
+        .IF_ID_Write(IF_ID_Write),
+
+        .InstrD(InstrD),
+        .PCD(PCD),
+        .PCplus4D(PCplus4D)
+    );
+
+
+    decoder_cycle D1(
+        .clk(clk),
+        .rst(rst),
+
+        .InstrD(InstrD),
+        .PCD(PCD),
+        .PCplus4D(PCplus4D),
+
+        .RegwriteW(RegwriteW),
+        .RDW(RDW),
+        .ResultW(ResultW),
+
+        // Hazard detection
+        .Control_Flush(Control_Flush),
+
+        .RegWriteE(RegWriteE),
+        .MemWriteE(MemWriteE),
+        .ResultSrcE(ResultSrcE),
+        .ALUSrcE(ALUSrcE),
+        .BranchE(BranchE),
+
+        .ALUControlE(ALUControlE),
+        .Imm_Ext_E(Imm_Ext_E),
+
+        .RD1_E(RD1_E),
+        .RD2_E(RD2_E),
+
+        .PCE(PCE),
+        .PCplus4E(PCplus4E),
+
+        .RDE(RDE),
+
+        // Source registers for forwarding
+        .Rs1_E(Rs1_E),
+        .Rs2_E(Rs2_E)
+    );
+
+    execute_cycle E1(
+        .clk(clk),
+        .rst(rst),
+
+        .RegWriteE(RegWriteE),
+        .MemWriteE(MemWriteE),
+        .ResultSrcE(ResultSrcE),
+        .ALUSrcE(ALUSrcE),
+        .BranchE(BranchE),
+
+        .ALUControlE(ALUControlE),
+
+        .Imm_Ext_E(Imm_Ext_E),
+
+        .RD1_E(RD1_E),
+        .RD2_E(RD2_E),
+
+        .PCE(PCE),
+        .PCplus4E(PCplus4E),
+
+        .RDE(RDE),
+
+        // Outputs
+        .PCtargetE(PCtargetE),
+        .PCSrcE(PCsrcE),
+
+        .RegWriteM(RegWriteM),
+        .ResultSrcM(ResultSrcM),
+        .MemWriteM(MemWriteM),
+
+        .RDM(RDM),
+
+        .PCplus4M(PCplus4M),
+        .ALU_resultM(ALU_resultM),
+        .WritedataM(WritedataM),
+
+        // Forwarding
+        .ResultW(ResultW),
+        .ForwardAE(ForwardAE),
+        .ForwardBE(ForwardBE)
+    );
+
+
+    memory_cycle M1(
+        .clk(clk),
+        .rst(rst),
+
+        .RegWriteM(RegWriteM),
+        .ResultSrcM(ResultSrcM),
+        .MemWriteM(MemWriteM),
+
+        .RDM(RDM),
+
+        .PCplus4M(PCplus4M),
+        .ALU_resultM(ALU_resultM),
+        .WritedataM(WritedataM),
+
+        .RegWriteW(RegwriteW),
+        .ResultSrcW(ResultSrcW),
+        .MemWriteW(MemWriteW),
+
+        .RDW(RDW),
+
+        .PCplus4W(PCplus4W),
+        .ALU_resultW(ALU_resultW),
+        .ReadDataW(ReadDataW)
+    );
+
+
+    writeback_cycle W1(
+        .clk(clk),
+        .rst(rst),
+
+        .ResultSrcW(ResultSrcW),
+
+        .PCplus4W(PCplus4W),
+        .ALU_resultW(ALU_resultW),
+        .ReadDataW(ReadDataW),
+
+        .ResultW(ResultW)
+    );
+
+
+    hazard_unit H1(
+        .rst(rst),
+
+        .RegWriteM(RegWriteM),
+        .RegWriteW(RegwriteW),
+
+        .RDM(RDM),
+        .RDW(RDW),
+
+        .Rs1_E(Rs1_E),
+        .Rs2_E(Rs2_E),
+
+        .ForwardAE(ForwardAE),
+        .ForwardBE(ForwardBE)
+    );
+
+
+    hazard_detection_unit HD1(
+        .ResultSrcE(ResultSrcE),
+
+        .RDE(RDE),
+
+        .Rs1_D(Rs1_D),
+        .Rs2_D(Rs2_D),
+
+        .Rs1_Used_D(Rs1_Used_D),
+        .Rs2_Used_D(Rs2_Used_D),
+
+        .PCWrite(PCWrite),
+        .IF_ID_Write(IF_ID_Write),
+        .Control_Flush(Control_Flush)
+    );
+
+endmodule
