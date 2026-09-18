@@ -1,0 +1,109 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company:
+// Engineer:
+//
+// Create Date: 09.09.2026 13:03:59
+// Design Name:
+// Module Name: fetch_cycle
+// Project Name:
+// Target Devices:
+// Tool Versions:
+// Description:
+// Dependencies:
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+//////////////////////////////////////////////////////////////////////////////////
+
+module fetch_cycle(
+    clk,
+    rst,
+    PCsrcE,
+    PCtargetE,
+    PCWrite,
+    IF_ID_Write,
+    InstrD,
+    PCD,
+    PCplus4D
+);
+
+    input clk, rst;
+    input PCsrcE;
+    input [31:0] PCtargetE;
+
+    // Hazard detection signals
+    input PCWrite;
+    input IF_ID_Write;
+
+    output [31:0] PCD, PCplus4D;
+    output [31:0] InstrD;
+
+
+    wire [31:0] PCF;
+    wire [31:0] PC_F;
+    wire [31:0] PCplus4F;
+    wire [31:0] InstrF;
+
+    reg [31:0] InstrF_reg;
+    reg [31:0] PCF_reg;
+    reg [31:0] PCplus4F_reg;
+
+
+    mux dut1(
+        .a(PCplus4F),
+        .b(PCtargetE),
+        .s(PCsrcE),
+        .c(PC_F)
+    );
+
+   PC dut2(
+    .clk(clk),
+    .rst(rst),
+    .PC_Next(PC_F),
+    .PC(PCF),
+    .PCWrite(PCWrite)
+     );
+
+
+    instr_mem dut3(
+        .rst(rst),
+        .A(PCF),
+        .RD(InstrF)
+    );
+
+
+    PC_Adder dut4(
+        .a(PCF),
+        .b(32'h00000004),
+        .c(PCplus4F)
+    );
+
+//register logic
+    always @(posedge clk or posedge rst)
+    begin
+        if(rst)
+        begin
+            InstrF_reg   <= 32'b0;
+            PCF_reg      <= 32'b0;
+            PCplus4F_reg <= 32'b0;
+        end
+
+        else
+        begin
+            // Update IF/ID only when allowed
+            if(IF_ID_Write)
+            begin
+                InstrF_reg   <= InstrF;
+                PCF_reg      <= PCF;
+                PCplus4F_reg <= PCplus4F;
+            end
+        end
+    end
+
+
+    assign InstrD    = InstrF_reg;
+    assign PCD       = PCF_reg;
+    assign PCplus4D = PCplus4F_reg;
+
+endmodule
