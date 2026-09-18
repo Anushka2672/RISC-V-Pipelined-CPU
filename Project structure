@@ -8,7 +8,6 @@ RISC-V-Pipelined-CPU/
 │   ├── execute_cycle.v
 │   ├── memory_cycle.v
 │   ├── writeback_cycle.v
-│   │
 │   ├── control_unit.v
 │   ├── main_decoder.v
 │   ├── ALU_decoder.v
@@ -27,7 +26,8 @@ RISC-V-Pipelined-CPU/
 │   └── tb.v
 │
 ├── Waveforms/
+│   ├── overall_flow.png
+│   ├── pipeline_top_architecture.png
+│   ├── pipeline_datapath.png
 │   └── final_waveform.png
-│
-├── README.md
-└── LICENSE
+└── README.md
