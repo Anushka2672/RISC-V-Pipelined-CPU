@@ -1,0 +1,30 @@
+module data_memory(A,WD,clk,WE,RD,rst);
+
+    input [31:0] A,WD;
+    input clk,WE;
+    input rst;
+
+    output [31:0] RD;
+
+    reg [31:0] Data_mem [0:1023];
+
+    integer i;
+
+    initial begin
+        for(i = 0; i < 1024; i = i + 1)
+            Data_mem[i] = 32'h00000000;
+
+        // Test data
+        Data_mem[2] = 32'd100;   // Address 8 contains 100
+    end
+
+    assign RD = (rst == 1'b1) ? 32'h00000000 :
+                Data_mem[A[31:2]];
+
+    always @(posedge clk)
+    begin
+        if(WE)
+            Data_mem[A[31:2]] <= WD;
+    end
+
+endmodule
