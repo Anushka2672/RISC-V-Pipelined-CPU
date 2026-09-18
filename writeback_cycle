@@ -1,0 +1,44 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 15.09.2026 18:20:28
+// Design Name: 
+// Module Name: writeback_cycle
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module writeback_cycle(clk,rst,
+    ResultSrcW,
+    PCplus4W,
+    ALU_resultW,
+    ReadDataW,
+    ResultW
+
+    );
+    
+    input clk,rst,ResultSrcW;
+    input[31:0]PCplus4W,ALU_resultW,ReadDataW;
+    output [31:0] ResultW;
+  
+    mux dut( .a(ALU_resultW),
+              .b(ReadDataW),
+              .s(ResultSrcW),
+               .c(ResultW)
+               );
+  
+  
+      
+endmodule
