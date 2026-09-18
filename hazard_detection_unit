@@ -1,0 +1,49 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 17.09.2026 16:54:47
+// Design Name: 
+// Module Name: hazard_detection_unit
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module hazard_detection_unit(
+    input ResultSrcE,
+    input [4:0] RDE,
+    input [4:0] Rs1_D,
+    input [4:0] Rs2_D,
+    input Rs1_Used_D,
+    input Rs2_Used_D,
+
+    output PCWrite,
+    output IF_ID_Write,
+    output Control_Flush
+);
+
+    wire StallD;
+
+    assign StallD =
+        ResultSrcE &&
+        (RDE != 5'b00000) &&
+        (
+            (Rs1_Used_D && (RDE == Rs1_D)) ||
+            (Rs2_Used_D && (RDE == Rs2_D))
+        );
+
+    assign PCWrite      = ~StallD;
+    assign IF_ID_Write  = ~StallD;
+    assign Control_Flush = StallD;
+
+endmodule
