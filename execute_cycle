@@ -1,0 +1,200 @@
+`timescale 1ns / 1ps
+
+module execute_cycle(
+    clk,
+    rst,
+    RegWriteE,
+    MemWriteE,
+    ResultSrcE,
+    ALUSrcE,
+    BranchE,
+    ALUControlE,
+    Imm_Ext_E,
+    RD1_E,
+    RD2_E,
+    PCE,
+    PCplus4E,
+    RDE,
+
+    PCtargetE,
+    PCSrcE,
+    RegWriteM,
+    ResultSrcM,
+    MemWriteM,
+    RDM,
+    PCplus4M,
+    ALU_resultM,
+    WritedataM,
+
+    ResultW,
+    ForwardBE,
+    ForwardAE
+);
+
+    input clk, rst;
+
+    input RegWriteE;
+    input ALUSrcE;
+    input MemWriteE;
+    input ResultSrcE;
+    input BranchE;
+
+    input [2:0] ALUControlE;
+
+    input [4:0] RDE;
+
+    input [31:0] RD1_E;
+    input [31:0] RD2_E;
+    input [31:0] Imm_Ext_E;
+
+    input [31:0] PCE;
+    input [31:0] PCplus4E;
+
+    input [31:0] ResultW;
+
+    // Forwarding control signals
+    input [1:0] ForwardAE;
+    input [1:0] ForwardBE;
+
+    output [31:0] PCtargetE;
+
+    output PCSrcE;
+    output RegWriteM;
+    output MemWriteM;
+    output ResultSrcM;
+
+    output [31:0] ALU_resultM;
+    output [31:0] WritedataM;
+    output [31:0] PCplus4M;
+
+    output [4:0] RDM;
+
+
+//wires
+    wire [31:0] src_A;
+    wire [31:0] src_B_interim;
+    wire [31:0] src_B;
+
+    wire [31:0] Result_E;
+
+    wire ZeroE;
+
+
+    // Forwarding MUX for ALU input A
+
+    Mux_3_by_1 M1(
+        .a(RD1_E),
+        .b(ResultW),
+        .c(ALU_resultM),
+        .s(ForwardAE),
+        .d(src_A)
+    );
+
+
+    // Forwarding MUX for ALU input B
+
+    Mux_3_by_1 M2(
+        .a(RD2_E),
+        .b(ResultW),
+        .c(ALU_resultM),
+        .s(ForwardBE),
+        .d(src_B_interim)
+    );
+
+
+    mux dut2(
+        .a(src_B_interim),
+        .b(Imm_Ext_E),
+        .s(ALUSrcE),
+        .c(src_B)
+    );
+
+    ALU_Flag dut1(
+        .A(src_A),
+        .B(src_B),
+        .ALUControl(ALUControlE),
+        .Result(Result_E),
+        .Z(ZeroE),
+        .N(),
+        .C(),
+        .V()
+    );
+
+    PC_Adder dut3(
+        .a(PCE),
+        .b(Imm_Ext_E),
+        .c(PCtargetE)
+    );
+
+
+    // Branch decision
+    // Active-high reset:
+    // rst = 1 -> PCSrcE = 0
+    // rst = 0 -> normal branch decision
+
+    assign PCSrcE = (rst == 1'b1) ? 1'b0 :
+                    (BranchE & ZeroE);
+
+
+    reg RegWriteE_r;
+    reg ResultSrcE_r;
+    reg MemWriteE_r;
+
+    reg [4:0] RDE_r;
+
+    reg [31:0] PCplus4E_r;
+    reg [31:0] RD2_E_r;
+    reg [31:0] Result_E_r;
+
+    always @(posedge clk or posedge rst)
+    begin
+
+        if(rst)
+        begin
+            RegWriteE_r  <= 1'b0;
+            ResultSrcE_r <= 1'b0;
+            MemWriteE_r  <= 1'b0;
+
+            RDE_r        <= 5'b00000;
+
+            PCplus4E_r   <= 32'b0;
+
+            // Store data must be the forwarded value
+            RD2_E_r      <= 32'b0;
+
+            Result_E_r   <= 32'b0;
+        end
+
+        else
+        begin
+            RegWriteE_r  <= RegWriteE;
+            ResultSrcE_r <= ResultSrcE;
+            MemWriteE_r  <= MemWriteE;
+
+            RDE_r        <= RDE;
+
+            PCplus4E_r   <= PCplus4E;
+
+            // Forwarded register value for store
+            RD2_E_r      <= src_B_interim;
+
+            Result_E_r   <= Result_E;
+        end
+
+    end
+
+
+    assign RegWriteM  = RegWriteE_r;
+    assign ResultSrcM = ResultSrcE_r;
+    assign MemWriteM  = MemWriteE_r;
+
+    assign RDM        = RDE_r;
+
+    assign PCplus4M   = PCplus4E_r;
+
+    assign WritedataM = RD2_E_r;
+
+    assign ALU_resultM = Result_E_r;
+
+
+endmodule
