@@ -1,0 +1,104 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 12.09.2026 23:23:34
+// Design Name: 
+// Module Name: memory_cycle
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module memory_cycle(clk,rst,
+    RegWriteM,
+    ResultSrcM,
+    MemWriteM,
+    RDM,
+    PCplus4M,
+    ALU_resultM,
+    WritedataM,
+    
+    
+    RegWriteW,
+    ResultSrcW,
+    MemWriteW,
+    RDW,
+    PCplus4W,
+    ALU_resultW,
+    ReadDataW
+    );
+    
+    input clk,rst,RegWriteM,ResultSrcM,MemWriteM ;
+    input[4:0]RDM;
+    input [31:0]PCplus4M,ALU_resultM,WritedataM;
+    
+    
+    output RegWriteW,ResultSrcW,MemWriteW;
+    output [4:0]RDW;
+    output [31:0]PCplus4W,ALU_resultW,ReadDataW;
+    
+    wire[31:0]ReadDataM;
+    
+    
+    data_memory dut1( .A(ALU_resultM),
+                  .WD(WritedataM),
+                   .clk(clk),
+                    .WE(MemWriteM),
+                     .RD(ReadDataM),
+                      .rst(rst)
+                      );
+      
+    //declare register
+      reg RegWriteM_r,ResultSrcM_r,MemWriteM_r;
+      reg[4:0]RDM_r;
+      reg[31:0] PCplus4M_r,ALU_resultM_r,ReadDataM_r;
+      
+   //register logic
+   always@(posedge clk or posedge rst)
+      begin
+         if(rst)
+           begin
+            RegWriteM_r   <= 1'b0;
+            ResultSrcM_r  <= 1'b0;
+            MemWriteM_r   <= 1'b0;
+
+            RDM_r         <= 5'b0;
+
+            PCplus4M_r    <= 32'b0;
+            ALU_resultM_r <= 32'b0;
+           ReadDataM_r   <= 32'b0;
+
+           end  
+           
+           else
+              begin
+                RegWriteM_r <=RegWriteM;
+                ResultSrcM_r<=ResultSrcM;
+               MemWriteM_r<=MemWriteM;
+               RDM_r<=RDM;
+               PCplus4M_r<=PCplus4M;
+               ALU_resultM_r<=ALU_resultM;
+               ReadDataM_r<=ReadDataM;               
+              end      
+            end
+            
+        //
+        assign RegWriteW = RegWriteM_r;
+        assign ResultSrcW = ResultSrcM_r;
+        assign MemWriteW = MemWriteM_r;
+        assign RDW = RDM_r;
+        assign PCplus4W = PCplus4M_r;
+        assign ALU_resultW = ALU_resultM_r;
+        assign ReadDataW = ReadDataM_r;
+endmodule
