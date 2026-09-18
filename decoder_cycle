@@ -1,0 +1,243 @@
+`timescale 1ns / 1ps
+
+module decoder_cycle(
+    clk,
+    rst,
+    InstrD,
+    PCD,
+    PCplus4D,
+    RegwriteW,
+    RDW,
+    ResultW,
+
+    // Hazard detection
+    Control_Flush,
+
+    RegWriteE,
+    MemWriteE,
+    ResultSrcE,
+    ALUSrcE,
+    BranchE,
+
+    ALUControlE,
+    Imm_Ext_E,
+    RD1_E,
+    RD2_E,
+    PCE,
+    PCplus4E,
+    RDE,
+    Rs1_E,
+    Rs2_E
+);
+
+    input clk, rst, RegwriteW;
+    input [31:0] InstrD, PCD, PCplus4D, ResultW;
+    input [4:0] RDW;
+
+    // Hazard detection signal
+    input Control_Flush;
+
+    output RegWriteE;
+    output MemWriteE;
+    output ResultSrcE;
+    output ALUSrcE;
+    output BranchE;
+
+    output [2:0] ALUControlE;
+
+    output [31:0] Imm_Ext_E;
+    output [31:0] RD1_E;
+    output [31:0] RD2_E;
+
+    output [31:0] PCE;
+    output [31:0] PCplus4E;
+
+    output [4:0] RDE;
+    output [4:0] Rs1_E;
+    output [4:0] Rs2_E;
+
+    wire RegWriteD;
+    wire MemWriteD;
+    wire ResultSrcD;
+    wire ALUSrcD;
+    wire BranchD;
+
+    wire [1:0] ImmSrcD;
+    wire [2:0] ALUControlD;
+
+    wire [31:0] Imm_Ext_D;
+    wire [31:0] RD1_D;
+    wire [31:0] RD2_D;
+
+
+    reg RegWriteD_r;
+    reg MemWriteD_r;
+    reg ResultSrcD_r;
+    reg ALUSrcD_r;
+    reg BranchD_r;
+
+    reg [1:0] ImmSrcD_r;
+    reg [2:0] ALUControlD_r;
+
+    reg [31:0] Imm_Ext_D_r;
+
+    reg [31:0] RD1_D_r;
+    reg [31:0] RD2_D_r;
+
+    reg [4:0] RD_D_r;
+
+    // Source registers
+    reg [4:0] Rs1_D_r;
+    reg [4:0] Rs2_D_r;
+
+    reg [31:0] PCD_r;
+    reg [31:0] PCplus4D_r;
+
+    Control_Unit dut1(
+        .op(InstrD[6:0]),
+        .RegWrite(RegWriteD),
+        .MemWrite(MemWriteD),
+        .ResultSrc(ResultSrcD),
+        .ALUSrc(ALUSrcD),
+        .ImmSrc(ImmSrcD),
+        .Branch(BranchD),
+        .funct3(InstrD[14:12]),
+        .funct7(InstrD[31:25]),
+        .ALUControl(ALUControlD)
+    );
+
+    reg_file dut2(
+        .A1(InstrD[19:15]),
+        .A2(InstrD[24:20]),
+        .A3(RDW),
+        .WD3(ResultW),
+        .WE3(RegwriteW),
+        .clk(clk),
+        .rst(rst),
+        .RD1(RD1_D),
+        .RD2(RD2_D)
+    );
+
+
+    Sign_Extend dut3(
+        .In(InstrD[31:7]),
+        .ImmSrc(ImmSrcD),
+        .Imm_Ext(Imm_Ext_D)
+    );
+
+
+//register logic
+    always @(posedge clk or posedge rst)
+    begin
+
+        if (rst)
+        begin
+            RegWriteD_r   <= 1'b0;
+            MemWriteD_r   <= 1'b0;
+            ResultSrcD_r  <= 1'b0;
+            ALUSrcD_r     <= 1'b0;
+            BranchD_r     <= 1'b0;
+
+            ImmSrcD_r     <= 2'b00;
+            ALUControlD_r <= 3'b000;
+
+            Imm_Ext_D_r   <= 32'b0;
+
+            RD1_D_r       <= 32'b0;
+            RD2_D_r       <= 32'b0;
+
+            PCD_r         <= 32'b0;
+            PCplus4D_r    <= 32'b0;
+
+            RD_D_r        <= 5'b00000;
+
+            Rs1_D_r       <= 5'b00000;
+            Rs2_D_r       <= 5'b00000;
+        end
+
+        else
+        begin
+
+            // If load-use hazard occurs
+
+            if (Control_Flush)
+            begin
+                RegWriteD_r   <= 1'b0;
+                MemWriteD_r   <= 1'b0;
+                ResultSrcD_r  <= 1'b0;
+                ALUSrcD_r     <= 1'b0;
+                BranchD_r     <= 1'b0;
+
+                ImmSrcD_r     <= 2'b00;
+                ALUControlD_r <= 3'b000;
+
+                Imm_Ext_D_r   <= 32'b0;
+
+                RD1_D_r       <= 32'b0;
+                RD2_D_r       <= 32'b0;
+
+                PCD_r         <= 32'b0;
+                PCplus4D_r    <= 32'b0;
+
+                RD_D_r        <= 5'b00000;
+
+                Rs1_D_r       <= 5'b00000;
+                Rs2_D_r       <= 5'b00000;
+            end
+
+          
+            else
+            begin
+                RegWriteD_r   <= RegWriteD;
+                MemWriteD_r   <= MemWriteD;
+                ResultSrcD_r  <= ResultSrcD;
+                ALUSrcD_r     <= ALUSrcD;
+                BranchD_r     <= BranchD;
+
+                ImmSrcD_r     <= ImmSrcD;
+                ALUControlD_r <= ALUControlD;
+
+                Imm_Ext_D_r   <= Imm_Ext_D;
+
+                RD1_D_r       <= RD1_D;
+                RD2_D_r       <= RD2_D;
+
+                PCD_r         <= PCD;
+                PCplus4D_r    <= PCplus4D;
+
+                // Destination register
+                RD_D_r        <= InstrD[11:7];
+
+                // Source registers
+                Rs1_D_r       <= InstrD[19:15];
+                Rs2_D_r       <= InstrD[24:20];
+            end
+
+        end
+
+    end
+
+
+    assign RegWriteE   = RegWriteD_r;
+    assign MemWriteE   = MemWriteD_r;
+    assign ResultSrcE  = ResultSrcD_r;
+    assign ALUSrcE     = ALUSrcD_r;
+    assign BranchE     = BranchD_r;
+
+    assign ALUControlE = ALUControlD_r;
+
+    assign Imm_Ext_E   = Imm_Ext_D_r;
+
+    assign RD1_E       = RD1_D_r;
+    assign RD2_E       = RD2_D_r;
+
+    assign PCE         = PCD_r;
+    assign PCplus4E    = PCplus4D_r;
+
+    assign RDE         = RD_D_r;
+
+    // Source registers for forwarding unit
+    assign Rs1_E       = Rs1_D_r;
+    assign Rs2_E       = Rs2_D_r;
+
+endmodule
