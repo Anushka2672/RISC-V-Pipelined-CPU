@@ -1,0 +1,33 @@
+RISC-V-Pipelined-CPU/
+│
+├── RTL/
+│   ├── top.v
+│   ├── PC.v
+│   ├── fetch_cycle.v
+│   ├── decoder_cycle.v
+│   ├── execute_cycle.v
+│   ├── memory_cycle.v
+│   ├── writeback_cycle.v
+│   │
+│   ├── control_unit.v
+│   ├── main_decoder.v
+│   ├── ALU_decoder.v
+│   ├── ALU_Flag.v
+│   ├── reg_file.v
+│   ├── Sign_Extend.v
+│   ├── PC_Adder.v
+│   ├── mux.v
+│   ├── Mux_3_by_1.v
+│   ├── instr_mem.v
+│   ├── data_memory.v
+│   ├── hazard_unit.v
+│   └── hazard_detection_unit.v
+│
+├── Simulation/
+│   └── tb.v
+│
+├── Waveforms/
+│   └── final_waveform.png
+│
+├── README.md
+└── LICENSE
