@@ -1,0 +1,53 @@
+module Control_Unit(
+    op,
+    RegWrite,
+    MemWrite,
+    ResultSrc,
+    ALUSrc,
+    ImmSrc,
+    Branch,
+    funct3,
+    funct7,
+    ALUControl
+);
+
+    input [6:0] op;
+    input [2:0] funct3;
+    input [6:0] funct7;
+
+    output RegWrite;
+    output MemWrite;
+    output ResultSrc;
+    output ALUSrc;
+    output Branch;
+
+    output [1:0] ImmSrc;
+    output [2:0] ALUControl;
+
+    // Internal signal
+    wire [1:0] ALUOp;
+
+
+    // Main Decoder
+    main_decoder dut1(
+        .op(op),
+        .RegWrite(RegWrite),
+        .MemWrite(MemWrite),
+        .ResultSrc(ResultSrc),
+        .ALUSrc(ALUSrc),
+        .ImmSrc(ImmSrc),
+        .Branch(Branch),
+        .ALUOp(ALUOp)
+    );
+
+
+    // ALU Decoder
+    ALU_decoder dut2(
+        .ALUOp(ALUOp),
+        .op5(op[5]),
+        .funct3(funct3),
+        .funct7(funct7[5]),
+        .ALUControl(ALUControl)
+    );
+
+endmodule
