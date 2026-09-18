@@ -1,0 +1,27 @@
+module instr_mem (
+    input  [31:0] A,
+    input         rst,
+    output [31:0] RD
+);
+
+    reg [31:0] mem [0:1023];
+
+    integer i;
+
+    initial begin
+
+        // Initialize memory to NOP
+        for(i = 0; i < 1024; i = i + 1)
+            mem[i] = 32'h00000013;
+
+        mem[0] = 32'h00802083;   // LW x1, 8(x0)
+        mem[1] = 32'h00102423;   // SW x1, 8(x0)
+        mem[2] = 32'h00402103;   // LW x2, 4(x0)
+        mem[3] = 32'h001101B3;   // ADD x3, x2, x1
+
+    end
+
+    assign RD = (rst == 1'b1) ? 32'h00000000 :
+                mem[A[31:2]];
+
+endmodule
